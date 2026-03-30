@@ -21,24 +21,27 @@ The keyboard supports customizable colors, opacity settings, and can be easily m
 - **Hold for repetitive clicks**: Keep holding the mouse button to trigger repeated clicks
 - **Compact interface**: Headerbar with minimal controls to save screen space
 - **Always-on-top**: Stays above other windows for easy access
+- **Russian layout support**: Automatically detects the active system layout on startup and displays Cyrillic or Latin labels accordingly. Switch layouts at any time with **Super + Space** on the virtual keyboard
 
-### **1. Install Dependencies**  
-Install  `python-uinput steam-devices` packages using your package manager:  
+### **1. Install Dependencies**
+Install the required packages using your package manager:
 
-**For Debian/Ubuntu-based distributions:**  
+**For Debian/Ubuntu-based distributions:**
 ```bash
-sudo apt install python3-uinput steam-devices
+sudo apt install python3-uinput steam-devices python3-gi gir1.2-gtk-3.0 gir1.2-gio-2.0
 ```
 
-**For Fedora-based distributions:**  
+**For Fedora-based distributions:**
 ```bash
-sudo dnf install python3-uinput steam-devices
+sudo dnf install python3-uinput steam-devices python3-gobject gtk3
 ```
 
-**For arch-based distributions:**  
+**For arch-based distributions:**
 ```bash
-yay -Syu python-uinput steam-devices
+yay -Syu python-uinput steam-devices python-gobject gtk3
 ```
+
+> `python3-gi` (PyGObject) and GTK 3 are required for the UI. `gir1.2-gio-2.0` is needed for automatic system layout detection on startup (reads `org.gnome.desktop.input-sources` via GSettings).
 
 
 ### **2. Download vboard**  
@@ -84,9 +87,17 @@ When launched, vboard presents a compact keyboard with a minimal interface. The 
 
 #### Interface Controls
 - ☰ (menu) - Toggle visibility of other interface controls
+- **EN / RU** - Indicator showing the current keyboard layout
 - + - Increase opacity
 - - - Decrease opacity
 - **Background dropdown** - Change the keyboard background color
+
+#### Switching Keyboard Layout
+vboard supports English (QWERTY) and Russian (ЙЦУКЕН) layouts. On startup it reads the active system input source and displays the matching labels automatically.
+
+To switch layouts while using vboard, press **Super** then **Space** on the virtual keyboard. This toggles the displayed labels between Latin and Cyrillic and sends a `Super+Space` event to the system so the OS input source switches in sync.
+
+> Layout detection on startup requires GNOME or any desktop that uses `org.gnome.desktop.input-sources` (GSettings). The layout switch via Super+Space works on any desktop that handles `Super+Space` as an input source switcher.
 
 ### Configuration
 vboard saves its settings to ~/.config/vboard/settings.conf. This configuration file stores:
@@ -139,7 +150,7 @@ vboard is licensed under the GNU Lesser General Public License v2.1. See LICENSE
 
 ## Note
 
-* Currently only the QWERTY US layout is supported, so other layouts may cause some keys to produce different keystrokes. But this could easily be fixed by modifying the row list arrangement.
+* English and Russian layouts are supported. Other system layouts will display English labels by default.
 
 * Currently do not work correctly on wlroots based window managers.
 
