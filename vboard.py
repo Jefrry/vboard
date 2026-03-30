@@ -7,7 +7,7 @@ import configparser
 os.environ['GDK_BACKEND'] = 'x11'
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio
 from gi.repository import GLib
 
 
@@ -27,6 +27,62 @@ key_mapping = {uinput.KEY_ESC: "Esc", uinput.KEY_1: "1", uinput.KEY_2: "2", uinp
     uinput.KEY_PAGEUP: "PageUp", uinput.KEY_DELETE: "Delete", uinput.KEY_END: "End", uinput.KEY_PAGEDOWN: "PageDown",
     uinput.KEY_RIGHT: "→", uinput.KEY_LEFT: "←", uinput.KEY_DOWN: "↓", uinput.KEY_UP: "↑", uinput.KEY_NUMLOCK: "NumLock",
     uinput.KEY_RIGHTCTRL: "Ctrl_R", uinput.KEY_LEFTMETA:"Super_L", uinput.KEY_RIGHTMETA:"Super_R"}
+
+# Keys whose labels change depending on layout or shift state
+VARIABLE_KEYS = {
+    '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=',
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\',
+    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'",
+    'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/'
+}
+
+# Display labels per layout and shift state: layout -> shift_active -> physical_key -> label
+LAYOUT_LABELS = {
+    'en': {
+        False: {
+            '`': '`', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+            '6': '6', '7': '7', '8': '8', '9': '9', '0': '0', '-': '-', '=': '=',
+            'Q': 'Q', 'W': 'W', 'E': 'E', 'R': 'R', 'T': 'T', 'Y': 'Y',
+            'U': 'U', 'I': 'I', 'O': 'O', 'P': 'P', '[': '[', ']': ']', '\\': '\\',
+            'A': 'A', 'S': 'S', 'D': 'D', 'F': 'F', 'G': 'G', 'H': 'H',
+            'J': 'J', 'K': 'K', 'L': 'L', ';': ';', "'": "'",
+            'Z': 'Z', 'X': 'X', 'C': 'C', 'V': 'V', 'B': 'B',
+            'N': 'N', 'M': 'M', ',': ',', '.': '.', '/': '/',
+        },
+        True: {
+            '`': '~', '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
+            '6': '^', '7': '&', '8': '*', '9': '(', '0': ')', '-': '_', '=': '+',
+            'Q': 'Q', 'W': 'W', 'E': 'E', 'R': 'R', 'T': 'T', 'Y': 'Y',
+            'U': 'U', 'I': 'I', 'O': 'O', 'P': 'P', '[': '{', ']': '}', '\\': '|',
+            'A': 'A', 'S': 'S', 'D': 'D', 'F': 'F', 'G': 'G', 'H': 'H',
+            'J': 'J', 'K': 'K', 'L': 'L', ';': ':', "'": '"',
+            'Z': 'Z', 'X': 'X', 'C': 'C', 'V': 'V', 'B': 'B',
+            'N': 'N', 'M': 'M', ',': '<', '.': '>', '/': '?',
+        },
+    },
+    'ru': {
+        False: {
+            '`': 'ё', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+            '6': '6', '7': '7', '8': '8', '9': '9', '0': '0', '-': '-', '=': '=',
+            'Q': 'й', 'W': 'ц', 'E': 'у', 'R': 'к', 'T': 'е', 'Y': 'н',
+            'U': 'г', 'I': 'ш', 'O': 'щ', 'P': 'з', '[': 'х', ']': 'ъ', '\\': '\\',
+            'A': 'ф', 'S': 'ы', 'D': 'в', 'F': 'а', 'G': 'п', 'H': 'р',
+            'J': 'о', 'K': 'л', 'L': 'д', ';': 'ж', "'": 'э',
+            'Z': 'я', 'X': 'ч', 'C': 'с', 'V': 'м', 'B': 'и',
+            'N': 'т', 'M': 'ь', ',': 'б', '.': 'ю', '/': '.',
+        },
+        True: {
+            '`': 'Ё', '1': '!', '2': '"', '3': '№', '4': ';', '5': '%',
+            '6': ':', '7': '?', '8': '*', '9': '(', '0': ')', '-': '_', '=': '+',
+            'Q': 'Й', 'W': 'Ц', 'E': 'У', 'R': 'К', 'T': 'Е', 'Y': 'Н',
+            'U': 'Г', 'I': 'Ш', 'O': 'Щ', 'P': 'З', '[': 'Х', ']': 'Ъ', '\\': '/',
+            'A': 'Ф', 'S': 'Ы', 'D': 'В', 'F': 'А', 'G': 'П', 'H': 'Р',
+            'J': 'О', 'K': 'Л', 'L': 'Д', ';': 'Ж', "'": 'Э',
+            'Z': 'Я', 'X': 'Ч', 'C': 'С', 'V': 'М', 'B': 'И',
+            'N': 'Т', 'M': 'Ь', ',': 'Б', '.': 'Ю', '/': ',',
+        },
+    },
+}
 
 class VirtualKeyboard(Gtk.Window):
     def __init__(self):
@@ -50,6 +106,9 @@ class VirtualKeyboard(Gtk.Window):
         self.opacity="0.90"
         self.text_color="white"
         self.read_settings()
+
+        self.current_layout = 'en'
+        self.key_buttons = {}  # physical key label -> button widget
 
         self.modifiers = {
             uinput.KEY_LEFTSHIFT: False,
@@ -126,9 +185,16 @@ class VirtualKeyboard(Gtk.Window):
         for row_index, keys in enumerate(rows):
             self.create_row(grid, row_index, keys)
 
+        self.detect_initial_layout()
+
 
     def create_settings(self):
         self.create_button("☰", self.change_visibility,callbacks=1)
+        self.layout_btn = Gtk.Button(label="EN")
+        self.layout_btn.set_name("headbar-button")
+        self.layout_btn.set_tooltip_text("Keyboard layout")
+        self.header.add(self.layout_btn)
+        self.buttons.append(self.layout_btn)
         self.create_button("+", self.change_opacity,True,2)
         self.create_button("-", self.change_opacity, False,2)
         self.create_button( f"{self.opacity}")
@@ -300,6 +366,8 @@ class VirtualKeyboard(Gtk.Window):
                 self.row_buttons.append(button)
                 if key_event in self.modifiers:
                     self.modifier_buttons[key_event] = button
+                if key_label in VARIABLE_KEYS:
+                    self.key_buttons[key_label] = button
                 if key_label == "Esc": width=2
                 elif key_label == "Space": width=12
                 elif key_label == "CapsLock": width=3
@@ -315,15 +383,36 @@ class VirtualKeyboard(Gtk.Window):
                 col += width  # Skip 4 columns for the space button
 
     def update_label(self, show_symbols):
-        button_positions = [(1, "` ~"), (2, "1 !"), (3, "2 @"), (4, "3 #"), (5, "4 $"), (6, "5 %"), (7, "6 ^"), (8, "7 &"), (9, "8 *"), (10, "9 ("), (11, "0 )")
-        , (12, "- _"), (13, "= +"),(26,"[ {"), (27,"] }"), (28,"\\ |"), (39, "; :"), (40, "' \""), (50, ", <"), (51, ". >"), (52, "/ ?")]
+        labels = LAYOUT_LABELS[self.current_layout][show_symbols]
+        for key, button in self.key_buttons.items():
+            if key in labels:
+                button.set_label(labels[key])
 
-        for pos, label in button_positions:
-            label_parts = label.split()  
-            if show_symbols:
-                self.row_buttons[pos].set_label(label_parts[1])
-            else:
-                self.row_buttons[pos].set_label(label_parts[0])
+    def detect_initial_layout(self):
+        try:
+            settings = Gio.Settings.new('org.gnome.desktop.input-sources')
+            sources = settings.get_value('sources')
+            current_idx = settings.get_uint('current')
+            if current_idx < sources.n_children():
+                _, layout_id = sources.get_child_value(current_idx).unpack()
+                if layout_id == 'ru':
+                    self.current_layout = 'ru'
+                    self.layout_btn.set_label('RU')
+                    self.update_label(False)
+        except Exception:
+            pass
+
+    def toggle_layout(self):
+        new_layout = 'ru' if self.current_layout == 'en' else 'en'
+        self.current_layout = new_layout
+        self.layout_btn.set_label(new_layout.upper())
+        shift_active = self.modifiers[uinput.KEY_LEFTSHIFT] or self.modifiers[uinput.KEY_RIGHTSHIFT]
+        self.update_label(shift_active)
+        # Emit Super+Space via uinput so GNOME Shell switches the actual system layout
+        self.device.emit(uinput.KEY_LEFTMETA, 1)
+        self.device.emit(uinput.KEY_SPACE, 1)
+        self.device.emit(uinput.KEY_SPACE, 0)
+        self.device.emit(uinput.KEY_LEFTMETA, 0)
 
     def update_modifier(self, key_event, value):
       self.modifiers[key_event] = value
@@ -350,6 +439,14 @@ class VirtualKeyboard(Gtk.Window):
             else:
                 self.update_label(False)
             return  # modifiers don’t repeat
+
+        # Super+Space = toggle layout
+        if key_event == uinput.KEY_SPACE and (self.modifiers[uinput.KEY_LEFTMETA] or self.modifiers[uinput.KEY_RIGHTMETA]):
+            for meta in (uinput.KEY_LEFTMETA, uinput.KEY_RIGHTMETA):
+                if self.modifiers[meta]:
+                    self.update_modifier(meta, False)
+            self.toggle_layout()
+            return
 
         # Fire key once immediately
         self.emit_key(key_event)
