@@ -309,7 +309,9 @@ class VirtualKeyboard(Gtk.Window):
                     background-image: none;
                     padding: 0px;
                     margin: 0px;
-
+                    background-color: transparent;
+                    transition: background-color 200ms ease-out,
+                                border-color 200ms ease-out;
                 }}
 
         button {{
@@ -320,6 +322,12 @@ class VirtualKeyboard(Gtk.Window):
 
        #grid button:hover {{
             border: 1px solid #00CACB;
+        }}
+
+       #grid button:active {{
+            background-color: rgba(0, 202, 203, 0.25);
+            border: 1px solid #00CACB;
+            transition: none;
         }}
 
        #grid button.pressed,
