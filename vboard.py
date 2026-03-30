@@ -174,7 +174,7 @@ class VirtualKeyboard(Gtk.Window):
 
         # Define rows for keys
         rows = [
-            ["Esc", "`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace" ],
+            ["Esc", "`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace", "Delete"],
             ["Tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\"],
             ["CapsLock", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'", "Enter"],
             ["Shift_L", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/", "Shift_R", "↑"],
@@ -364,10 +364,12 @@ class VirtualKeyboard(Gtk.Window):
         for key_label in keys:
             key_event = next((key for key, label in key_mapping.items() if label == key_label), None)
             if key_event:
-                if key_label in ("Shift_R", "Shift_L", "Alt_L", "Alt_R", "Ctrl_L", "Ctrl_R", "Super_L", "Super_R"):
-                    button = Gtk.Button(label=key_label[:-2])
-                else:
-                    button = Gtk.Button(label=key_label)
+                display_names = {"Backspace": "BCS", "Delete": "DEL",
+                                 "Shift_R": "Shift", "Shift_L": "Shift",
+                                 "Alt_L": "Alt", "Alt_R": "Alt",
+                                 "Ctrl_L": "Ctrl", "Ctrl_R": "Ctrl",
+                                 "Super_L": "Super", "Super_R": "Super"}
+                button = Gtk.Button(label=display_names.get(key_label, key_label))
                 button.connect("pressed", self.on_button_press, key_event)
                 button.connect("released", self.on_button_release)
                 button.connect("leave-notify-event", self.on_button_release)
@@ -381,7 +383,7 @@ class VirtualKeyboard(Gtk.Window):
                 elif key_label == "CapsLock": width=3
                 elif key_label == "Shift_R" : width=4
                 elif key_label == "Shift_L" : width=4
-                elif key_label == "Backspace": width=5
+                elif key_label == "Backspace": width=2
                 elif key_label == "`": width=1
                 elif key_label == "\\" : width=4
                 elif key_label == "Enter": width=5
